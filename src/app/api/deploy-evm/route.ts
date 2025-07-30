@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
     const hardhatConfig = `
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import '@moved/hardhat-plugin';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -189,6 +190,7 @@ main()
         "hardhat": "^2.19.0",
         "@nomicfoundation/hardhat-toolbox": "^4.0.0",
         "@openzeppelin/hardhat-upgrades": "^3.9.1",
+        "@moved/hardhat-plugin": "^0.2.1",
         "typescript": "^5.0.0",
         "@types/node": "^20.0.0"
       }
@@ -215,15 +217,8 @@ main()
     
     // 6. Install dependencies with sanitized command
     console.log('Installing dependencies...');
-    const installCmd = sanitizeCommand('npm install --no-optional --no-audit --no-fund');
-    await execAsync(installCmd, { 
-      cwd: tempDir, 
-      env: { 
-        ...process.env,
-        npm_config_cache: '/tmp/.npm',
-        npm_config_prefix: '/tmp/.npm'
-      } 
-    });
+    const installCmd = sanitizeCommand('npm install');
+    await execAsync(installCmd, { cwd: tempDir, env: { ...process.env } });
     console.log('Dependencies installed');
     
     // 7. Compile with sanitized command
