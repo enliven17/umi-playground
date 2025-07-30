@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 type DeployFormProps = {
-  onDeploy: (privateKey: string, accountAddress?: string) => void;
+  onDeploy: (privateKey: string, accountAddress?: string, constructorArgs?: string[]) => void;
   contractType: 'move' | 'evm';
   code: string;
 };

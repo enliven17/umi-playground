@@ -17,9 +17,11 @@ import {
 
 function execAsync(cmd: string, opts: any = {}): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    exec(cmd, opts, (error, stdout, stderr) => {
-      if (error) reject({ error, stdout, stderr });
-      else resolve({ stdout, stderr });
+    exec(cmd, { ...opts, encoding: 'utf-8' }, (error, stdout, stderr) => {
+      const out = typeof stdout === 'string' ? stdout : stdout?.toString?.() ?? '';
+      const err = typeof stderr === 'string' ? stderr : stderr?.toString?.() ?? '';
+      if (error) reject({ error, stdout: out, stderr: err });
+      else resolve({ stdout: out, stderr: err });
     });
   });
 }
