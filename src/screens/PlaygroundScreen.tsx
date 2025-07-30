@@ -19,11 +19,9 @@ const HowToUse = () => (
 const PlaygroundScreen: React.FC = () => {
   const [contractType, setContractType] = useState<'move' | 'evm'>('move');
   const [code, setCode] = useState('');
-  const [privateKey, setPrivateKey] = useState('');
-  const [accountAddress, setAccountAddress] = useState('');
   const [result, setResult] = useState<any | null>(null);
 
-  const handleDeploy = async () => {
+  const handleDeploy = async (privateKey: string, accountAddress?: string) => {
     setResult({ message: 'Deploying...' });
     try {
       const body: any = { code, privateKey };
@@ -58,20 +56,56 @@ const PlaygroundScreen: React.FC = () => {
         </div>
         <div style={{ width: '100%', marginBottom: 0 }}>
           <DeployForm
-            privateKey={privateKey}
-            onChange={setPrivateKey}
             onDeploy={handleDeploy}
-            accountAddress={contractType === 'move' ? accountAddress : undefined}
-            onAccountAddressChange={setAccountAddress}
+            contractType={contractType}
           />
         </div>
       </div>
-      <div style={{ width: '90vw', maxWidth: 1400, margin: '0 auto', background: 'rgba(255,255,255,0.18)', borderRadius: 18, boxShadow: '0 4px 16px 0 rgba(31,38,135,0.10)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', marginBottom: 0, padding: '16px 24px' }}>
-        <ResultBox result={result} />
-      </div>
-      <div style={{ width: '90vw', maxWidth: 1400 }}>
-        <HowToUse />
-      </div>
+      {/* Result Box */}
+      {result && (
+        <div style={{ width: '90vw', maxWidth: 1400, margin: '0 auto', background: 'rgba(255,255,255,0.18)', borderRadius: 18, boxShadow: '0 4px 16px 0 rgba(31,38,135,0.10)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', padding: '16px 24px' }}>
+          <ResultBox result={result} />
+        </div>
+      )}
+      
+      {/* Footer */}
+      <footer style={{
+        marginTop: 'auto',
+        padding: '40px 20px 20px',
+        textAlign: 'center',
+        background: 'transparent',
+        color: '#333',
+        fontSize: 14
+      }}>
+        <div style={{ marginBottom: 8 }}>
+          Built on <strong style={{ color: '#1976d2' }}>Umi</strong>. 🌊
+        </div>
+        <div>
+          by{' '}
+          <a 
+            href="https://github.com/enliven17" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              color: '#1976d2',
+              textDecoration: 'none',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              borderBottom: '1px solid transparent'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = '#1565c0';
+              e.currentTarget.style.borderBottomColor = '#1565c0';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = '#1976d2';
+              e.currentTarget.style.borderBottomColor = 'transparent';
+            }}
+          >
+            enliven
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };
