@@ -41,8 +41,9 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Parse request body
+    // Parse user-supplied constructor arguments from request
     const body = await req.json();
+    const constructorArgs = Array.isArray(body.constructorArgs) ? body.constructorArgs : [];
     
     // Input validation
     const validation = validateInput(body);
@@ -93,13 +94,40 @@ import "@nomicfoundation/hardhat-toolbox";
 import '@moved/hardhat-plugin';
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.28",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
+        version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      }
+    ]
+  },
   defaultNetwork: "devnet",
   networks: {
     devnet: {
       url: "${UMI_RPC_URL}",
       accounts: ["${formattedPrivateKey}"]
     }
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
   }
 };
 
@@ -113,16 +141,26 @@ export default config;
 import { ethers } from 'hardhat';
 
 async function main() {
+  const [deployer] = await ethers.getSigners();
   const ${contractName} = await ethers.getContractFactory('${contractName}');
-  const ${contractName.toLowerCase()} = await ${contractName}.deploy({
+
+  // User-supplied constructor arguments (injected by backend)
+  const deployArgs = JSON.parse(process.env.CONSTRUCTOR_ARGS || '[]');
+
+  console.log('Deploying with args:', deployArgs);
+  const instance = await ${contractName}.deploy(...deployArgs, {
     gasLimit: 3000000,
     gasPrice: ethers.parseUnits('0.1', 'gwei')
   });
-  await ${contractName.toLowerCase()}.waitForDeployment();
-  
-  const receipt = await ethers.provider.getTransactionReceipt(${contractName.toLowerCase()}.deploymentTransaction()?.hash!);
+  await instance.waitForDeployment();
+
+  const receipt = await ethers.provider.getTransactionReceipt(instance.deploymentTransaction()?.hash!);
   console.log('${contractName} is deployed to:', receipt?.contractAddress);
-  console.log('Deployment transaction hash:', ${contractName.toLowerCase()}.deploymentTransaction()?.hash);
+  console.log('Deployment transaction hash:', instance.deploymentTransaction()?.hash);
+
+  // Output for backend to parse
+  console.log('MAIN_ADDRESS:', receipt?.contractAddress);
+  console.log('MAIN_TX:', instance.deploymentTransaction()?.hash);
 }
 
 main()
@@ -142,9 +180,14 @@ main()
       version: "1.0.0",
       private: true,
       scripts: { "deploy": "npx hardhat run scripts/deploy.ts" },
+      dependencies: {
+        "@openzeppelin/contracts": "^5.4.0",
+        "@openzeppelin/contracts-upgradeable": "^5.4.0"
+      },
       devDependencies: {
         "hardhat": "^2.19.0",
         "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+        "@openzeppelin/hardhat-upgrades": "^3.9.1",
         "@moved/hardhat-plugin": "^0.2.1",
         "typescript": "^5.0.0",
         "@types/node": "^20.0.0"
@@ -185,29 +228,32 @@ main()
     // 8. Deploy with sanitized command
     console.log('Deploying Solidity contract...');
     const deployCmd = sanitizeCommand('npx hardhat run scripts/deploy.ts');
-    const { stdout } = await execAsync(deployCmd, { cwd: tempDir, env: { ...process.env } });
+    const { stdout } = await execAsync(deployCmd, { cwd: tempDir, env: { ...process.env, CONSTRUCTOR_ARGS: JSON.stringify(constructorArgs) } });
     console.log('Solidity contract deployed:', stdout);
     
-    // Extract contract address from output
-    const contractAddressRegex = new RegExp(`${contractName} is deployed to: (0x[a-fA-F0-9]+)`);
-    const contractAddressMatch = stdout.match(contractAddressRegex);
-    const contractAddress = contractAddressMatch ? contractAddressMatch[1] : 'Contract address not found';
-    
-    // Extract transaction hash from output
-    let txHash = 'Transaction hash not found';
-    const txHashMatch = stdout.match(/Deployment transaction hash: (0x[a-fA-F0-9]+)/);
-    if (txHashMatch) {
-      txHash = txHashMatch[1];
-    }
+    // Extract contract addresses and tx hashes from output
+    let erc20Address = null;
+    let erc20Tx = null;
+    let mainAddress = null;
+    let mainTx = null;
+    const erc20AddrMatch = stdout.match(/ERC20_ADDRESS: (0x[a-fA-F0-9]+)/);
+    const erc20TxMatch = stdout.match(/ERC20_TX: (0x[a-fA-F0-9]+)/);
+    const mainAddrMatch = stdout.match(/MAIN_ADDRESS: (0x[a-fA-F0-9]+)/);
+    const mainTxMatch = stdout.match(/MAIN_TX: (0x[a-fA-F0-9]+)/);
+    if (erc20AddrMatch) erc20Address = erc20AddrMatch[1];
+    if (erc20TxMatch) erc20Tx = erc20TxMatch[1];
+    if (mainAddrMatch) mainAddress = mainAddrMatch[1];
+    if (mainTxMatch) mainTx = mainTxMatch[1];
     
     // Clean up temp directory immediately
     await cleanupTempDir(tempDir);
     tempDir = null;
     
+    // Return both addresses and tx hashes if available
     return createSuccessResponse({
       message: 'Solidity contract deployed successfully!',
-      contractAddress: contractAddress,
-      transactionHash: txHash,
+      erc20: erc20Address ? { address: erc20Address, txHash: erc20Tx } : null,
+      contract: mainAddress ? { address: mainAddress, txHash: mainTx } : null,
       rateLimitRemaining: rateLimit.remaining,
       rateLimitResetIn: rateLimit.resetInSeconds
     });

@@ -54,11 +54,8 @@ const PlaygroundScreen: React.FC = () => {
       // Handle new API response format
       if (response.ok) {
         setResult({
+          ...data,
           message: data.message || 'Deployment successful!',
-          contractAddress: data.contractAddress,
-          transactionHash: data.transactionHash,
-          rateLimitRemaining: data.rateLimitRemaining,
-          rateLimitResetIn: data.rateLimitResetIn
         });
       } else {
         setResult({

@@ -43,13 +43,27 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
           : 'rgba(244,67,54,0.2)',
         border: `1px solid ${isSuccess ? 'rgba(76,175,80,0.3)' : 'rgba(244,67,54,0.3)'}`,
         color: isSuccess ? '#2e7d32' : '#d32f2f',
-        fontWeight: 600
+        fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8
       }}>
         {parsedResult.message}
+        {parsedResult.message === 'Deploying...' && (
+          <span style={{
+            marginLeft: 8,
+            color: '#888',
+            fontSize: 13,
+            fontStyle: 'italic',
+            opacity: 0.7
+          }}>
+            (~20-30s)
+          </span>
+        )}
       </div>
 
-      {/* Contract Address */}
-      {parsedResult.contractAddress && (
+      {/* Contract Address (new format) */}
+      {parsedResult.contract && parsedResult.contract.address && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4 }}>📋 Contract Address:</div>
           <div style={{ 
@@ -60,13 +74,13 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
             fontFamily: 'monospace',
             fontSize: 14
           }}>
-            {parsedResult.contractAddress}
+            {parsedResult.contract.address}
           </div>
         </div>
       )}
 
-      {/* Transaction Hash */}
-      {parsedResult.transactionHash && (
+      {/* Transaction Hash (new format) */}
+      {parsedResult.contract && parsedResult.contract.txHash && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4 }}>🔗 Transaction Hash:</div>
           <div style={{ 
@@ -77,7 +91,39 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
             fontFamily: 'monospace',
             fontSize: 14
           }}>
-            {parsedResult.transactionHash}
+            {parsedResult.contract.txHash}
+          </div>
+        </div>
+      )}
+
+      {/* ERC20 Address and Tx (if present) */}
+      {parsedResult.erc20 && parsedResult.erc20.address && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, color: '#388e3c', marginBottom: 4 }}>🪙 ERC20 Address:</div>
+          <div style={{ 
+            padding: '8px 12px', 
+            background: 'rgba(56,142,60,0.1)', 
+            borderRadius: 6, 
+            border: '1px solid rgba(56,142,60,0.2)',
+            fontFamily: 'monospace',
+            fontSize: 14
+          }}>
+            {parsedResult.erc20.address}
+          </div>
+        </div>
+      )}
+      {parsedResult.erc20 && parsedResult.erc20.txHash && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, color: '#388e3c', marginBottom: 4 }}>🪙 ERC20 Tx Hash:</div>
+          <div style={{ 
+            padding: '8px 12px', 
+            background: 'rgba(56,142,60,0.1)', 
+            borderRadius: 6, 
+            border: '1px solid rgba(56,142,60,0.2)',
+            fontFamily: 'monospace',
+            fontSize: 14
+          }}>
+            {parsedResult.erc20.txHash}
           </div>
         </div>
       )}
