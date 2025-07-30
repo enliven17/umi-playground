@@ -10,6 +10,7 @@ type CodeEditorProps = {
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [isDragOver, setIsDragOver] = useState(false);
   
   // Her VM için ayrı state tutuyoruz
   const [moveCode, setMoveCode] = useState<string>('');
@@ -32,6 +33,19 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
     const file = event.target.files?.[0];
     if (!file) return;
 
+    processFile(file);
+  };
+
+  const processFile = (file: File) => {
+    // Dosya uzantısını kontrol et
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const expectedExtension = language === 'move' ? 'move' : 'sol';
+    
+    if (fileExtension !== expectedExtension) {
+      alert(`Please upload a .${expectedExtension} file for ${language === 'move' ? 'Move' : 'Solidity'} contracts`);
+      return;
+    }
+
     // Dosya adını kaydet
     setFileName(file.name);
 
@@ -50,6 +64,27 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      processFile(file);
+    }
   };
 
   const handleClearCode = () => {
@@ -192,14 +227,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
       
       {/* Code Preview Area */}
       <div style={{ padding: '20px 24px 24px 24px' }}>
-        <div style={{
-          position: 'relative',
-          borderRadius: 16,
-          background: 'rgba(255,255,255,0.1)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          overflow: 'hidden',
-          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)'
-        }}>
+        <div 
+          style={{
+            position: 'relative',
+            borderRadius: 16,
+            background: isDragOver ? 'rgba(25,118,210,0.1)' : 'rgba(255,255,255,0.1)',
+            border: isDragOver ? '2px dashed rgba(25,118,210,0.5)' : '1px solid rgba(255,255,255,0.2)',
+            overflow: 'hidden',
+            boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.1)',
+            transition: 'all 0.3s ease'
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           {/* Code Header */}
           <div style={{
             padding: '12px 16px',
