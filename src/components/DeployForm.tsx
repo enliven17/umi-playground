@@ -186,23 +186,25 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
             <div style={{ 
               flex: 1, 
               overflow: 'auto',
-              paddingRight: 8,
+              paddingRight: 12,
               scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(0,0,0,0.2) transparent'
+              scrollbarColor: 'rgba(255,255,255,0.3) transparent'
             }}>
               <style jsx>{`
                 div::-webkit-scrollbar {
                   width: 6px;
                 }
                 div::-webkit-scrollbar-track {
-                  background: transparent;
-                }
-                div::-webkit-scrollbar-thumb {
-                  background: rgba(0,0,0,0.2);
+                  background: rgba(255,255,255,0.05);
                   border-radius: 3px;
                 }
+                div::-webkit-scrollbar-thumb {
+                  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+                  border-radius: 3px;
+                  border: 1px solid rgba(255,255,255,0.1);
+                }
                 div::-webkit-scrollbar-thumb:hover {
-                  background: rgba(0,0,0,0.3);
+                  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
                 }
               `}</style>
               
