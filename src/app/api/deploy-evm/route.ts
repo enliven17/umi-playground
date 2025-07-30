@@ -92,30 +92,17 @@ export async function POST(req: NextRequest) {
     // 2. hardhat.config.ts
     const hardhatConfig = `
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-ethers";
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [
-      {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
-      },
-      {
-        version: "0.8.28",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
       }
-    ]
+    }
   },
   defaultNetwork: "devnet",
   networks: {
@@ -126,7 +113,6 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "./contracts",
-    tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts"
   }
@@ -182,15 +168,14 @@ main()
       private: true,
       scripts: { "deploy": "npx hardhat run scripts/deploy.ts" },
       dependencies: {
-        "@openzeppelin/contracts": "^5.4.0",
-        "@openzeppelin/contracts-upgradeable": "^5.4.0"
+        "@openzeppelin/contracts": "5.4.0",
+        "ethers": "6.8.1"
       },
       devDependencies: {
-        "hardhat": "^2.19.0",
-        "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-        "@openzeppelin/hardhat-upgrades": "^3.9.1",
-        "typescript": "^5.0.0",
-        "@types/node": "^20.0.0"
+        "hardhat": "2.19.0",
+        "@nomicfoundation/hardhat-ethers": "3.0.0",
+        "typescript": "5.0.0",
+        "@types/node": "20.0.0"
       }
     };
     await writeFile(join(tempDir, 'package.json'), JSON.stringify(pkg, null, 2), 'utf8');
@@ -215,27 +200,42 @@ main()
     
     // 6. Install dependencies with sanitized command
     console.log('Installing dependencies...');
-    const installCmd = sanitizeCommand('npm install --no-optional --no-audit --no-fund');
+    const installCmd = sanitizeCommand('npm install --no-optional --no-audit --no-fund --no-package-lock --prefer-offline');
     await execAsync(installCmd, { 
       cwd: tempDir, 
       env: { 
         ...process.env,
         npm_config_cache: '/tmp/.npm',
-        npm_config_prefix: '/tmp/.npm'
+        npm_config_prefix: '/tmp/.npm',
+        npm_config_registry: 'https://registry.npmjs.org/',
+        HOME: '/tmp'
       } 
     });
     console.log('Dependencies installed');
     
     // 7. Compile with sanitized command
     console.log('Compiling Solidity contract...');
-    const compileCmd = sanitizeCommand('npx hardhat compile');
-    await execAsync(compileCmd, { cwd: tempDir, env: { ...process.env } });
+    const compileCmd = sanitizeCommand('npx hardhat compile --force');
+    await execAsync(compileCmd, { 
+      cwd: tempDir, 
+      env: { 
+        ...process.env,
+        HOME: '/tmp'
+      } 
+    });
     console.log('Solidity contract compiled');
     
     // 8. Deploy with sanitized command
     console.log('Deploying Solidity contract...');
     const deployCmd = sanitizeCommand('npx hardhat run scripts/deploy.ts');
-    const { stdout } = await execAsync(deployCmd, { cwd: tempDir, env: { ...process.env, CONSTRUCTOR_ARGS: JSON.stringify(constructorArgs) } });
+    const { stdout } = await execAsync(deployCmd, { 
+      cwd: tempDir, 
+      env: { 
+        ...process.env, 
+        CONSTRUCTOR_ARGS: JSON.stringify(constructorArgs),
+        HOME: '/tmp'
+      } 
+    });
     console.log('Solidity contract deployed:', stdout);
     
     // Extract contract addresses and tx hashes from output
