@@ -211,7 +211,7 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
                   <h3 style={{ color: '#1976d2', marginBottom: 16, fontSize: 20, fontWeight: 600 }}>🚀 Quick Start Guide</h3>
                   <ol style={{ margin: 0, paddingLeft: 20 }}>
                     <li style={{ marginBottom: 12 }}><strong>Select Virtual Machine:</strong> Choose between MoveVM or EVM</li>
-                    <li style={{ marginBottom: 12 }}><strong>Upload Contract:</strong> Click "Upload .move/.sol File" or paste your code</li>
+                    <li style={{ marginBottom: 12 }}><strong>Upload Contract:</strong> Click "Upload .move/.sol File" to upload your contract</li>
                     <li style={{ marginBottom: 12 }}><strong>Enter Private Key:</strong> Add your wallet's private key (0x...)</li>
                     <li style={{ marginBottom: 12 }}><strong>Account Address (Move only):</strong> Enter your account address for Move contracts</li>
                     <li style={{ marginBottom: 12 }}><strong>Deploy:</strong> Click "Deploy Contract" and wait for confirmation</li>
