@@ -21,7 +21,7 @@ const PlaygroundScreen: React.FC = () => {
   const [code, setCode] = useState('');
   const [result, setResult] = useState<any | null>(null);
 
-  const handleDeploy = async (privateKey: string, accountAddress?: string) => {
+  const handleDeploy = async (privateKey: string, accountAddress?: string, constructorArgs?: string[]) => {
     if (!code.trim()) {
       alert('Please enter contract code');
       return;
@@ -41,7 +41,7 @@ const PlaygroundScreen: React.FC = () => {
       const endpoint = contractType === 'move' ? '/api/deploy-move' : '/api/deploy-evm';
       const payload = contractType === 'move'
         ? { code, privateKey, accountAddress }
-        : { code, privateKey };
+        : { code, privateKey, constructorArgs };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -121,6 +121,7 @@ const PlaygroundScreen: React.FC = () => {
           <DeployForm
             onDeploy={handleDeploy}
             contractType={contractType}
+            code={code}
           />
         </div>
       </div>

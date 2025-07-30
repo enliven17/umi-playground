@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 type DeployFormProps = {
   onDeploy: (privateKey: string, accountAddress?: string) => void;
   contractType: 'move' | 'evm';
+  code: string;
 };
 
 const inputStyle = {
@@ -27,13 +28,61 @@ const labelStyle = {
   display: 'block'
 };
 
-const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
+function parseSolidityConstructor(code: string): { name: string; type: string }[] {
+  // Naive regex: find constructor(...) and extract param list
+  const match = code.match(/constructor\s*\(([^)]*)\)/);
+  if (!match) return [];
+  const params = match[1].split(',').map(s => s.trim()).filter(Boolean);
+  return params.map(param => {
+    // e.g. 'address stakingToken' or 'uint256 amount'
+    const [type, name] = param.split(/\s+/);
+    return { name: name || '', type: type || '' };
+  });
+}
+
+function isValidAddress(addr: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(addr);
+}
+
+const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType, code }) => {
   const [showHowTo, setShowHowTo] = useState(false);
   const [privateKey, setPrivateKey] = useState('');
   const [accountAddress, setAccountAddress] = useState('');
+  const [constructorArgs, setConstructorArgs] = useState<string[]>([]);
+  const [constructorParams, setConstructorParams] = useState<{ name: string; type: string }[]>([]);
+  const [addressErrors, setAddressErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (contractType === 'evm') {
+      const params = parseSolidityConstructor(code);
+      setConstructorParams(params);
+      setConstructorArgs(Array(params.length).fill(''));
+      setAddressErrors(Array(params.length).fill(''));
+    } else {
+      setConstructorParams([]);
+      setConstructorArgs([]);
+      setAddressErrors([]);
+    }
+  }, [code, contractType]);
+
+  const handleArgChange = (idx: number, value: string) => {
+    const arr = [...constructorArgs];
+    arr[idx] = value;
+    setConstructorArgs(arr);
+    // Address validation
+    if (constructorParams[idx]?.type === 'address') {
+      const errArr = [...addressErrors];
+      errArr[idx] = value && !isValidAddress(value) ? 'Geçerli bir Ethereum adresi girin (0x...)' : '';
+      setAddressErrors(errArr);
+    }
+  };
 
   const handleDeploy = () => {
-    onDeploy(privateKey, accountAddress);
+    if (contractType === 'evm' && constructorParams.length > 0) {
+      onDeploy(privateKey, undefined, constructorArgs);
+    } else {
+      onDeploy(privateKey, accountAddress);
+    }
   };
 
   return (
@@ -67,6 +116,28 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
           </div>
         )}
 
+        {/* Dynamic Constructor Inputs (EVM only) */}
+        {contractType === 'evm' && constructorParams.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={labelStyle}>Constructor Arguments</label>
+            {constructorParams.map((param, idx) => (
+              <div key={idx} style={{ display: 'flex', flexDirection: 'column' }}>
+                <input
+                  type="text"
+                  placeholder={`${param.type} ${param.name}`}
+                  value={constructorArgs[idx] || ''}
+                  onChange={e => handleArgChange(idx, e.target.value)}
+                  style={inputStyle}
+                  autoComplete="off"
+                />
+                {param.type === 'address' && addressErrors[idx] && (
+                  <span style={{ color: '#d32f2f', fontSize: 13, marginTop: 2 }}>{addressErrors[idx]}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Deploy Button */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
           <button 
@@ -82,7 +153,8 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
               fontWeight: 700, 
               boxShadow: '0 4px 16px rgba(25,118,210,0.3)', 
               transition: 'all 0.3s',
-              minWidth: 200
+              minWidth: 200,
+              opacity: addressErrors.some(e => !!e) ? 0.5 : 1
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -92,6 +164,7 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 16px rgba(25,118,210,0.3)';
             }}
+            disabled={addressErrors.some(e => !!e)}
           >
             🚀 Deploy Contract
           </button>
