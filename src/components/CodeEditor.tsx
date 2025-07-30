@@ -246,24 +246,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
             maxHeight: '500px',
             overflow: 'auto'
           }}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                width: 8px;
-              }
-              div::-webkit-scrollbar-track {
-                background: rgba(255,255,255,0.1);
-                border-radius: 4px;
-              }
-              div::-webkit-scrollbar-thumb {
-                background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
-                border-radius: 4px;
-                border: 1px solid rgba(255,255,255,0.1);
-              }
-              div::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
-              }
-            `}</style>
-            
             <textarea
               value={code}
               onChange={(e) => onChange(e.target.value)}

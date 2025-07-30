@@ -186,28 +186,8 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
             <div style={{ 
               flex: 1, 
               overflow: 'auto',
-              paddingRight: 12,
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(255,255,255,0.3) transparent'
+              paddingRight: 12
             }}>
-              <style jsx>{`
-                div::-webkit-scrollbar {
-                  width: 6px;
-                }
-                div::-webkit-scrollbar-track {
-                  background: rgba(255,255,255,0.05);
-                  border-radius: 3px;
-                }
-                div::-webkit-scrollbar-thumb {
-                  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
-                  border-radius: 3px;
-                  border: 1px solid rgba(255,255,255,0.1);
-                }
-                div::-webkit-scrollbar-thumb:hover {
-                  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
-                }
-              `}</style>
-              
               <div style={{ fontSize: 16, lineHeight: 1.6, color: '#333' }}>
                 <div style={{ marginBottom: 24 }}>
                   <h3 style={{ color: '#1976d2', marginBottom: 16, fontSize: 20, fontWeight: 600 }}>🚀 Quick Start Guide</h3>
