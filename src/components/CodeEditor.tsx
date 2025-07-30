@@ -1,7 +1,8 @@
 "use client";
-
 import React, { useEffect } from 'react';
-import MonacoEditor from 'react-monaco-editor';
+import dynamic from 'next/dynamic';
+
+const MonacoEditor = dynamic(() => import('react-monaco-editor'), { ssr: false });
 
 type CodeEditorProps = {
   code: string;
@@ -28,15 +29,7 @@ const EXAMPLES = {
     }
 }
 `,
-  solidity: `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-contract Counter {
-    uint public value;
-    function increment() public {
-        value += 1;
-    }
-}
-`,
+  solidity: `// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\ncontract Counter {\n    uint public value;\n    function increment() public {\n        value += 1;\n    }\n}\n`,
 };
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => {
@@ -47,14 +40,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
     // eslint-disable-next-line
   }, [language]);
   return (
-    <div style={{ margin: '0 auto', maxWidth: 900, width: '100%' }}>
+    <div style={{ margin: '0 auto', maxWidth: 900, width: '100%', borderRadius: 18, background: 'rgba(255,255,255,0.15)', boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)' }}>
       <MonacoEditor
         width="100%"
-        height="600"
+        height="400"
         language={language === 'move' ? 'plaintext' : 'solidity'}
         theme="vs-dark"
         value={code}
-        options={{ fontSize: 16, minimap: { enabled: false } }}
+        options={{ fontSize: 16, minimap: { enabled: false }, fontFamily: 'Fira Mono, monospace' }}
         onChange={(val) => onChange(typeof val === 'string' ? val : '')}
       />
     </div>

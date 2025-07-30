@@ -10,12 +10,16 @@ type DeployFormProps = {
 
 const inputStyle = {
   flex: 1,
-  padding: 8,
-  borderRadius: 4,
-  border: '1px solid #ccc',
-  background: '#fff',
+  padding: '12px 14px',
+  borderRadius: 8,
+  border: '1px solid rgba(200,200,255,0.25)',
+  background: 'rgba(255,255,255,0.35)',
   color: '#222',
   fontSize: 16,
+  boxShadow: '0 2px 8px 0 rgba(31,38,135,0.08)',
+  backdropFilter: 'blur(6px)',
+  outline: 'none',
+  marginBottom: 0,
 };
 
 const DeployForm: React.FC<DeployFormProps> = ({ privateKey, onChange, onDeploy, accountAddress, onAccountAddressChange }) => (
@@ -39,7 +43,7 @@ const DeployForm: React.FC<DeployFormProps> = ({ privateKey, onChange, onDeploy,
         style={inputStyle}
         autoComplete="off"
       />
-      <button onClick={onDeploy} style={{ padding: '8px 20px', borderRadius: 4, background: '#1976d2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 16 }}>
+      <button onClick={onDeploy} style={{ padding: '12px 28px', borderRadius: 8, background: 'rgba(25,118,210,0.85)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 600, boxShadow: '0 2px 8px #1976d233', transition: 'all 0.2s' }}>
         Deploy
       </button>
     </div>
