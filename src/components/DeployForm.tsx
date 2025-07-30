@@ -22,29 +22,71 @@ const inputStyle = {
   marginBottom: 0,
 };
 
+const labelStyle = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: '#333',
+  marginBottom: 6,
+  display: 'block'
+};
+
 const DeployForm: React.FC<DeployFormProps> = ({ privateKey, onChange, onDeploy, accountAddress, onAccountAddressChange }) => (
-  <div style={{ margin: '16px 0', display: 'flex', gap: 8, flexDirection: 'column' }}>
-    {typeof accountAddress === 'string' && onAccountAddressChange && (
-      <input
-        type="text"
-        placeholder="Account Address (Move)"
-        value={accountAddress}
-        onChange={e => onAccountAddressChange(e.target.value)}
-        style={inputStyle}
-        autoComplete="off"
-      />
-    )}
-    <div style={{ display: 'flex', gap: 8 }}>
+  <div style={{ margin: '20px 0', display: 'flex', gap: 16, flexDirection: 'column' }}>
+    {/* Private Key Input */}
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <label style={labelStyle}>🔑 Private Key</label>
       <input
         type="password"
-        placeholder="Private Key"
+        placeholder="Enter your private key (0x...)"
         value={privateKey}
         onChange={e => onChange(e.target.value)}
         style={inputStyle}
         autoComplete="off"
       />
-      <button onClick={onDeploy} style={{ padding: '12px 28px', borderRadius: 8, background: 'rgba(25,118,210,0.85)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 16, fontWeight: 600, boxShadow: '0 2px 8px #1976d233', transition: 'all 0.2s' }}>
-        Deploy
+    </div>
+
+    {/* Account Address Input (Move only) */}
+    {typeof accountAddress === 'string' && onAccountAddressChange && (
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <label style={labelStyle}>📧 Account Address (Move)</label>
+        <input
+          type="text"
+          placeholder="Enter your account address (0x...)"
+          value={accountAddress}
+          onChange={e => onAccountAddressChange(e.target.value)}
+          style={inputStyle}
+          autoComplete="off"
+        />
+      </div>
+    )}
+
+    {/* Deploy Button */}
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+      <button 
+        onClick={onDeploy} 
+        style={{ 
+          padding: '14px 40px', 
+          borderRadius: 12, 
+          background: 'linear-gradient(135deg, rgba(25,118,210,0.9), rgba(25,118,210,0.7))', 
+          color: '#fff', 
+          border: 'none', 
+          cursor: 'pointer', 
+          fontSize: 18, 
+          fontWeight: 700, 
+          boxShadow: '0 4px 16px rgba(25,118,210,0.3)', 
+          transition: 'all 0.3s',
+          minWidth: 200
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(25,118,210,0.4)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(25,118,210,0.3)';
+        }}
+      >
+        🚀 Deploy Contract
       </button>
     </div>
   </div>

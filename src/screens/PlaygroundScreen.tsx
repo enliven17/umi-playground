@@ -21,9 +21,10 @@ const PlaygroundScreen: React.FC = () => {
   const [code, setCode] = useState('');
   const [privateKey, setPrivateKey] = useState('');
   const [accountAddress, setAccountAddress] = useState('');
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<any | null>(null);
+
   const handleDeploy = async () => {
-    setResult('Deploying...');
+    setResult({ message: 'Deploying...' });
     try {
       const body: any = { code, privateKey };
       if (contractType === 'move') body.accountAddress = accountAddress;
@@ -33,11 +34,12 @@ const PlaygroundScreen: React.FC = () => {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      setResult(data.message || JSON.stringify(data));
+      setResult(data);
     } catch (err) {
-      setResult('Deploy failed: ' + (err as Error).message);
+      setResult({ message: 'Deploy failed: ' + (err as Error).message });
     }
   };
+
   return (
     <div style={{ minHeight: '100vh', width: '100vw', background: 'linear-gradient(135deg, #e0e7ef 0%, #c9e7fa 100%)', position: 'relative', overflowX: 'hidden', padding: '0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ width: '90vw', maxWidth: 1400, margin: '40px auto 24px auto', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24, borderRadius: 24, background: 'rgba(255,255,255,0.25)', boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.25)', padding: '18px 48px' }}>
