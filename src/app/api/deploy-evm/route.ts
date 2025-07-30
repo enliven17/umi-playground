@@ -21,16 +21,16 @@ export async function POST(req: NextRequest) {
     console.log('EVM deployment request received:', { code: code.substring(0, 100) + '...', privateKey: privateKey.substring(0, 10) + '...' });
     
     if (!code || !privateKey) {
-      return new Response(JSON.stringify({ message: 'Code and privateKey are required.' }), { status: 400 });
+      return new Response(JSON.stringify({ message: 'Contract and privateKey are required.' }), { status: 400 });
     }
     
     const tempDir = join('/tmp', 'umi-evm-' + randomUUID().toString());
     console.log('Creating temp directory:', tempDir);
     await mkdir(tempDir, { recursive: true });
     
-    // 1. Create contracts directory and Counter.sol
+    // 1. Create contracts directory and HelloWorld.sol
     await mkdir(join(tempDir, 'contracts'), { recursive: true });
-    const contractPath = join(tempDir, 'contracts/Counter.sol');
+    const contractPath = join(tempDir, 'contracts/HelloWorld.sol');
     await writeFile(contractPath, code, 'utf8');
     console.log('Contract written to:', contractPath);
     
@@ -61,17 +61,17 @@ export default config;
 import { ethers } from 'hardhat';
 
 async function main() {
-  const Counter = await ethers.getContractFactory('Counter');
-  const counter = await Counter.deploy({
+  const HelloWorld = await ethers.getContractFactory('HelloWorld');
+  const helloWorld = await HelloWorld.deploy({
     gasLimit: 3000000,
     gasPrice: ethers.parseUnits('0.1', 'gwei')
   });
-  await counter.waitForDeployment();
+  await helloWorld.waitForDeployment();
   
-  // Get the generated contract address from the transaction receipt, don't use \`await counter.getAddress()\`
-  const receipt = await ethers.provider.getTransactionReceipt(counter.deploymentTransaction()?.hash!);
-  console.log('Counter is deployed to:', receipt?.contractAddress);
-  console.log('Deployment transaction hash:', counter.deploymentTransaction()?.hash);
+  // Get the generated contract address from the transaction receipt, don't use \`await helloWorld.getAddress()\`
+  const receipt = await ethers.provider.getTransactionReceipt(helloWorld.deploymentTransaction()?.hash!);
+  console.log('HelloWorld is deployed to:', receipt?.contractAddress);
+  console.log('Deployment transaction hash:', helloWorld.deploymentTransaction()?.hash);
 }
 
 main()
@@ -135,7 +135,7 @@ main()
     console.log('Solidity contract deployed:', stdout);
     
     // Extract contract address from output
-    const contractAddressMatch = stdout.match(/Counter is deployed to: (0x[a-fA-F0-9]+)/);
+    const contractAddressMatch = stdout.match(/HelloWorld is deployed to: (0x[a-fA-F0-9]+)/);
     const contractAddress = contractAddressMatch ? contractAddressMatch[1] : 'Contract address not found';
 
                // Extract transaction hash from output

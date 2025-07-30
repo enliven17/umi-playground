@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     console.log('Move deployment request received:', { code: code.substring(0, 100) + '...', privateKey: privateKey.substring(0, 10) + '...', accountAddress });
     
     if (!code || !privateKey || !accountAddress) {
-      return new Response(JSON.stringify({ message: 'Code, privateKey and accountAddress are required.' }), { status: 400 });
+      return new Response(JSON.stringify({ message: 'Contract, privateKey and accountAddress are required.' }), { status: 400 });
     }
     
     const tempDir = join('/tmp', 'umi-move-' + randomUUID());

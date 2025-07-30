@@ -17,7 +17,7 @@ const HowToUse = () => (
 );
 
 const PlaygroundScreen: React.FC = () => {
-  const [contractType, setContractType] = useState<'move' | 'evm'>('move');
+  const [contractType, setContractType] = useState<'move' | 'evm'>('evm');
   const [code, setCode] = useState('');
   const [result, setResult] = useState<any | null>(null);
 
@@ -46,11 +46,41 @@ const PlaygroundScreen: React.FC = () => {
       </div>
       <div style={{ display: 'flex', gap: 16, marginBottom: 32, justifyContent: 'center', alignItems: 'center', width: '90vw', maxWidth: 1400, borderRadius: 16, background: 'rgba(255,255,255,0.18)', boxShadow: '0 4px 16px 0 rgba(31,38,135,0.10)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', padding: '18px 36px' }}>
         <span style={{ fontWeight: 500, fontSize: 18, color: '#333', marginRight: 12 }}>Virtual Machine:</span>
-        <button onClick={() => setContractType('move')} style={{ minWidth: 110, fontSize: 18, fontWeight: 600, background: contractType === 'move' ? 'rgba(25,118,210,0.85)' : 'rgba(255,255,255,0.5)', color: contractType === 'move' ? '#fff' : '#1a237e', border: 'none', borderRadius: 10, padding: '12px 32px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: contractType === 'move' ? '0 2px 8px #1976d233' : 'none' }}>MoveVM</button>
+        <button 
+          disabled
+          style={{ 
+            minWidth: 110, 
+            fontSize: 18, 
+            fontWeight: 600, 
+            background: 'rgba(128,128,128,0.3)', 
+            color: 'rgba(255,255,255,0.6)', 
+            border: 'none', 
+            borderRadius: 10, 
+            padding: '12px 32px', 
+            cursor: 'not-allowed', 
+            transition: 'all 0.2s',
+            position: 'relative'
+          }}
+        >
+          MoveVM
+          <span style={{ 
+            position: 'absolute', 
+            top: -8, 
+            right: -8, 
+            background: '#ff6b6b', 
+            color: 'white', 
+            fontSize: 10, 
+            padding: '2px 6px', 
+            borderRadius: 8, 
+            fontWeight: 600 
+          }}>
+            Soon
+          </span>
+        </button>
         <button onClick={() => setContractType('evm')} style={{ minWidth: 110, fontSize: 18, fontWeight: 600, background: contractType === 'evm' ? 'rgba(25,118,210,0.85)' : 'rgba(255,255,255,0.5)', color: contractType === 'evm' ? '#fff' : '#1a237e', border: 'none', borderRadius: 10, padding: '12px 32px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: contractType === 'evm' ? '0 2px 8px #1976d233' : 'none' }}>EVM</button>
       </div>
       <div style={{ width: '90vw', maxWidth: 1400, margin: '0 auto', background: 'rgba(255,255,255,0.18)', borderRadius: 22, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.25)', padding: '40px 36px 32px 36px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', marginBottom: 24 }}>
-        <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 18, color: '#333', textShadow: '0 1px 4px #fff8' }}>{contractType === 'move' ? 'Move Contract' : 'Solidity Contract'}</div>
+        <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 18, color: '#333', textShadow: '0 1px 4px #fff8' }}>Solidity Contract</div>
         <div style={{ width: '100%', marginBottom: 24 }}>
           <CodeEditor code={code} onChange={setCode} language={contractType === 'move' ? 'move' : 'solidity'} />
         </div>
