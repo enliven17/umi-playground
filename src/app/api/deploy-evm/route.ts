@@ -3,6 +3,17 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { exec } from 'child_process';
+import { 
+  validateInput, 
+  checkRateLimit, 
+  sanitizeCommand, 
+  cleanupTempDir, 
+  scheduleCleanup, 
+  getClientIP, 
+  createErrorResponse, 
+  createSuccessResponse,
+  securityHeaders 
+} from '@/lib/security';
 
 const UMI_RPC_URL = 'https://devnet.uminetwork.com';
 
@@ -16,22 +27,58 @@ function execAsync(cmd: string, opts: any = {}): Promise<{ stdout: string; stder
 }
 
 export async function POST(req: NextRequest) {
+  let tempDir: string | null = null;
+  
   try {
-    const { code, privateKey } = await req.json();
-    console.log('EVM deployment request received:', { code: code.substring(0, 100) + '...', privateKey: privateKey.substring(0, 10) + '...' });
+    // Rate limiting
+    const clientIP = getClientIP(req);
+    const rateLimit = checkRateLimit(clientIP);
     
-    if (!code || !privateKey) {
-      return new Response(JSON.stringify({ message: 'Contract and privateKey are required.' }), { status: 400 });
+    if (!rateLimit.allowed) {
+      return createErrorResponse(
+        `Rate limit exceeded. Try again in ${rateLimit.resetInSeconds} seconds.`,
+        429
+      );
     }
     
-    // Extract contract name from code
+    // Parse request body
+    const body = await req.json();
+    
+    // Input validation
+    const validation = validateInput(body);
+    if (!validation.isValid) {
+      return createErrorResponse(validation.error!);
+    }
+    
+    const { code, privateKey } = body;
+    
+    // Ensure private key has 0x prefix
+    const formattedPrivateKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
+    
+    // Log request (without sensitive data)
+    console.log('EVM deployment request received:', { 
+      codeLength: code.length, 
+      privateKeyPrefix: formattedPrivateKey.substring(0, 10) + '...',
+      clientIP,
+      rateLimitRemaining: rateLimit.remaining
+    });
+    
+    // Extract and validate contract name
     const contractNameMatch = code.match(/contract\s+(\w+)/);
-    const contractName = contractNameMatch ? contractNameMatch[1] : 'Contract';
+    if (!contractNameMatch) {
+      return createErrorResponse('No valid contract found in code');
+    }
+    
+    const contractName = contractNameMatch[1];
     console.log('Detected contract name:', contractName);
     
-    const tempDir = join('/tmp', 'umi-evm-' + randomUUID().toString());
+    // Create temporary directory
+    tempDir = join('/tmp', 'umi-evm-' + randomUUID().toString());
     console.log('Creating temp directory:', tempDir);
     await mkdir(tempDir, { recursive: true });
+    
+    // Schedule cleanup
+    scheduleCleanup(tempDir);
     
     // 1. Create contracts directory and contract file
     await mkdir(join(tempDir, 'contracts'), { recursive: true });
@@ -39,7 +86,7 @@ export async function POST(req: NextRequest) {
     await writeFile(contractPath, code, 'utf8');
     console.log('Contract written to:', contractPath);
     
-    // 2. hardhat.config.ts (Umi dokümantasyonuna göre)
+    // 2. hardhat.config.ts
     const hardhatConfig = `
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
@@ -51,7 +98,7 @@ const config: HardhatUserConfig = {
   networks: {
     devnet: {
       url: "${UMI_RPC_URL}",
-      accounts: ["${privateKey}"]
+      accounts: ["${formattedPrivateKey}"]
     }
   }
 };
@@ -61,7 +108,7 @@ export default config;
     await writeFile(join(tempDir, 'hardhat.config.ts'), hardhatConfig, 'utf8');
     console.log('Hardhat config written');
     
-    // 3. scripts/deploy.ts (Umi dokümantasyonuna göre)
+    // 3. scripts/deploy.ts
     const deployScript = `
 import { ethers } from 'hardhat';
 
@@ -73,7 +120,6 @@ async function main() {
   });
   await ${contractName.toLowerCase()}.waitForDeployment();
   
-  // Get the generated contract address from the transaction receipt, don't use \`await ${contractName.toLowerCase()}.getAddress()\`
   const receipt = await ethers.provider.getTransactionReceipt(${contractName.toLowerCase()}.deploymentTransaction()?.hash!);
   console.log('${contractName} is deployed to:', receipt?.contractAddress);
   console.log('Deployment transaction hash:', ${contractName.toLowerCase()}.deploymentTransaction()?.hash);
@@ -90,7 +136,7 @@ main()
     await writeFile(join(tempDir, 'scripts/deploy.ts'), deployScript, 'utf8');
     console.log('Deploy script written');
     
-    // 4. package.json (Umi dokümantasyonuna göre)
+    // 4. package.json
     const pkg = {
       name: "umi-evm-temp",
       version: "1.0.0",
@@ -104,7 +150,7 @@ main()
         "@types/node": "^20.0.0"
       }
     };
-    await writeFile(join(tempDir, 'package.json'), JSON.stringify(pkg), 'utf8');
+    await writeFile(join(tempDir, 'package.json'), JSON.stringify(pkg, null, 2), 'utf8');
     console.log('Package.json written');
     
     // 5. tsconfig.json
@@ -124,50 +170,63 @@ main()
     await writeFile(join(tempDir, 'tsconfig.json'), tsconfig, 'utf8');
     console.log('Tsconfig.json written');
     
-    // 6. Install dependencies
+    // 6. Install dependencies with sanitized command
     console.log('Installing dependencies...');
-    await execAsync('npm install', { cwd: tempDir, env: { ...process.env } });
+    const installCmd = sanitizeCommand('npm install');
+    await execAsync(installCmd, { cwd: tempDir, env: { ...process.env } });
     console.log('Dependencies installed');
     
-    // 7. Compile
+    // 7. Compile with sanitized command
     console.log('Compiling Solidity contract...');
-    await execAsync('npx hardhat compile', { cwd: tempDir, env: { ...process.env } });
+    const compileCmd = sanitizeCommand('npx hardhat compile');
+    await execAsync(compileCmd, { cwd: tempDir, env: { ...process.env } });
     console.log('Solidity contract compiled');
     
-    // 8. Deploy
+    // 8. Deploy with sanitized command
     console.log('Deploying Solidity contract...');
-    const { stdout } = await execAsync('npx hardhat run scripts/deploy.ts', { cwd: tempDir, env: { ...process.env } });
+    const deployCmd = sanitizeCommand('npx hardhat run scripts/deploy.ts');
+    const { stdout } = await execAsync(deployCmd, { cwd: tempDir, env: { ...process.env } });
     console.log('Solidity contract deployed:', stdout);
     
     // Extract contract address from output
     const contractAddressRegex = new RegExp(`${contractName} is deployed to: (0x[a-fA-F0-9]+)`);
     const contractAddressMatch = stdout.match(contractAddressRegex);
     const contractAddress = contractAddressMatch ? contractAddressMatch[1] : 'Contract address not found';
-
-               // Extract transaction hash from output
-           let txHash = 'Transaction hash not found';
-           const txHashMatch = stdout.match(/Deployment transaction hash: (0x[a-fA-F0-9]+)/);
-           if (txHashMatch) {
-             txHash = txHashMatch[1];
-           }
-
-    return new Response(JSON.stringify({
+    
+    // Extract transaction hash from output
+    let txHash = 'Transaction hash not found';
+    const txHashMatch = stdout.match(/Deployment transaction hash: (0x[a-fA-F0-9]+)/);
+    if (txHashMatch) {
+      txHash = txHashMatch[1];
+    }
+    
+    // Clean up temp directory immediately
+    await cleanupTempDir(tempDir);
+    tempDir = null;
+    
+    return createSuccessResponse({
       message: 'Solidity contract deployed successfully!',
       contractAddress: contractAddress,
       transactionHash: txHash,
-      fullOutput: stdout
-    }), { status: 200 });
+      rateLimitRemaining: rateLimit.remaining,
+      rateLimitResetIn: rateLimit.resetInSeconds
+    });
+    
   } catch (err: any) {
     console.error('EVM deployment error:', err);
+    
+    // Clean up temp directory on error
+    if (tempDir) {
+      await cleanupTempDir(tempDir).catch(console.error);
+    }
+    
     const errorMessage = err.error?.message || err.message || 'Unknown error';
     const stdout = err.stdout || '';
     const stderr = err.stderr || '';
     
-    return new Response(JSON.stringify({ 
-      message: 'Error: ' + errorMessage, 
-      stdout: stdout, 
-      stderr: stderr,
-      fullError: err 
-    }), { status: 500 });
+    return createErrorResponse(
+      `Deployment failed: ${errorMessage}`,
+      500
+    );
   }
 }

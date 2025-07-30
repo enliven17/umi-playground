@@ -37,6 +37,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
   };
 
   const processFile = (file: File) => {
+    // Dosya boyutu kontrolü (1MB)
+    const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+      return;
+    }
+    
     // Dosya uzantısını kontrol et
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     const expectedExtension = language === 'move' ? 'move' : 'sol';
@@ -45,13 +52,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
       alert(`Please upload a .${expectedExtension} file for ${language === 'move' ? 'Move' : 'Solidity'} contracts`);
       return;
     }
-
+    
     // Dosya adını kaydet
     setFileName(file.name);
 
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
+      
+      // Kod uzunluğu kontrolü (50KB)
+      const MAX_CODE_LENGTH = 50000; // 50KB
+      if (content.length > MAX_CODE_LENGTH) {
+        alert(`Code too long. Maximum ${MAX_CODE_LENGTH} characters allowed`);
+        return;
+      }
+      
       onChange(content);
       
       // İlgili VM'in state'ini güncelle
@@ -221,7 +236,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
           borderRadius: 8,
           border: '1px solid rgba(255,255,255,0.2)'
         }}>
-          {language === 'move' ? 'Supports .move files' : 'Supports .sol files'}
+          {language === 'move' ? 'Supports .move files' : 'Supports .sol files'} • Max 1MB
         </span>
       </div>
       
@@ -290,7 +305,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
             <textarea
               value={code}
               onChange={(e) => onChange(e.target.value)}
-              placeholder={`Upload a ${language === 'move' ? '.move' : '.sol'} file to see its content here...\n\n📄 Drag and drop or click "Upload File" to get started`}
+              placeholder={`Upload a ${language === 'move' ? '.move' : '.sol'} file to see its content here...\n\n📄 Drag and drop or click "Upload File" to get started\n📏 Max file size: 1MB • Max code length: 50K characters`}
               readOnly
               style={{
                 width: '100%',
@@ -325,6 +340,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, language }) => 
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 10 }}>📄</span>
               {code ? `${code.split('\n').length} lines` : 'No content'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 10 }}>📏</span>
+              {code ? `${code.length.toLocaleString()}/50K chars` : '0/50K chars'}
             </span>
           </div>
           <span style={{ fontStyle: 'italic', opacity: 0.8 }}>

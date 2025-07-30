@@ -15,6 +15,11 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
     parsedResult = { message: result };
   }
 
+  // Determine if it's a success or error message
+  const isSuccess = parsedResult.message?.includes('successfully') || 
+                   parsedResult.message?.includes('Deploying') ||
+                   (!parsedResult.error && !parsedResult.message?.includes('failed'));
+
   return (
     <div style={{ 
       marginTop: 16, 
@@ -33,11 +38,11 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
         marginBottom: 16, 
         padding: '12px 16px', 
         borderRadius: 8,
-        background: parsedResult.message?.includes('successfully') 
+        background: isSuccess 
           ? 'rgba(76,175,80,0.2)' 
           : 'rgba(244,67,54,0.2)',
-        border: `1px solid ${parsedResult.message?.includes('successfully') ? 'rgba(76,175,80,0.3)' : 'rgba(244,67,54,0.3)'}`,
-        color: parsedResult.message?.includes('successfully') ? '#2e7d32' : '#d32f2f',
+        border: `1px solid ${isSuccess ? 'rgba(76,175,80,0.3)' : 'rgba(244,67,54,0.3)'}`,
+        color: isSuccess ? '#2e7d32' : '#d32f2f',
         fontWeight: 600
       }}>
         {parsedResult.message}
@@ -73,6 +78,27 @@ const ResultBox: React.FC<ResultBoxProps> = ({ result }) => {
             fontSize: 14
           }}>
             {parsedResult.transactionHash}
+          </div>
+        </div>
+      )}
+
+      {/* Rate Limit Info */}
+      {parsedResult.rateLimitRemaining !== undefined && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontWeight: 600, color: '#666', marginBottom: 4 }}>⏱️ Rate Limit:</div>
+          <div style={{ 
+            padding: '8px 12px', 
+            background: 'rgba(255,255,255,0.1)', 
+            borderRadius: 6, 
+            border: '1px solid rgba(255,255,255,0.2)',
+            fontSize: 14
+          }}>
+            {parsedResult.rateLimitRemaining} requests remaining
+            {parsedResult.rateLimitResetIn && (
+              <span style={{ marginLeft: 8, color: '#999', fontSize: 12 }}>
+                (resets in {parsedResult.rateLimitResetIn}s)
+              </span>
+            )}
           </div>
         </div>
       )}

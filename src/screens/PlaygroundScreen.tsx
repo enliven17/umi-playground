@@ -22,19 +22,55 @@ const PlaygroundScreen: React.FC = () => {
   const [result, setResult] = useState<any | null>(null);
 
   const handleDeploy = async (privateKey: string, accountAddress?: string) => {
+    if (!code.trim()) {
+      alert('Please enter contract code');
+      return;
+    }
+    if (!privateKey.trim()) {
+      alert('Please enter your private key');
+      return;
+    }
+    if (contractType === 'move' && !accountAddress?.trim()) {
+      alert('Please enter your account address for Move contracts');
+      return;
+    }
+
     setResult({ message: 'Deploying...' });
+
     try {
-      const body: any = { code, privateKey };
-      if (contractType === 'move') body.accountAddress = accountAddress;
-      const res = await fetch(`/api/deploy-${contractType}`, {
+      const endpoint = contractType === 'move' ? '/api/deploy-move' : '/api/deploy-evm';
+      const payload = contractType === 'move'
+        ? { code, privateKey, accountAddress }
+        : { code, privateKey };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      setResult(data);
-    } catch (err) {
-      setResult({ message: 'Deploy failed: ' + (err as Error).message });
+
+      const data = await response.json();
+      
+      // Handle new API response format
+      if (response.ok) {
+        setResult({
+          message: data.message || 'Deployment successful!',
+          contractAddress: data.contractAddress,
+          transactionHash: data.transactionHash,
+          rateLimitRemaining: data.rateLimitRemaining,
+          rateLimitResetIn: data.rateLimitResetIn
+        });
+      } else {
+        setResult({
+          message: data.error || 'Deployment failed',
+          error: true
+        });
+      }
+    } catch (error) {
+      setResult({ 
+        message: `Deploy failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: true
+      });
     }
   };
 

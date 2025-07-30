@@ -44,7 +44,7 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
           <label style={labelStyle}>🔑 Private Key</label>
           <input
             type="password"
-            placeholder="Enter your private key (0x...)"
+            placeholder="Enter your private key"
             value={privateKey}
             onChange={e => setPrivateKey(e.target.value)}
             style={inputStyle}
@@ -194,7 +194,7 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
                   <ol style={{ margin: 0, paddingLeft: 20 }}>
                     <li style={{ marginBottom: 12 }}><strong>Select Virtual Machine:</strong> Choose between MoveVM or EVM</li>
                     <li style={{ marginBottom: 12 }}><strong>Upload Contract:</strong> Click "Upload .move/.sol File" to upload your contract</li>
-                    <li style={{ marginBottom: 12 }}><strong>Enter Private Key:</strong> Add your wallet's private key (0x...)</li>
+                    <li style={{ marginBottom: 12 }}><strong>Enter Private Key:</strong> Add your wallet's private key</li>
                     <li style={{ marginBottom: 12 }}><strong>Account Address (Move only):</strong> Enter your account address for Move contracts</li>
                     <li style={{ marginBottom: 12 }}><strong>Deploy:</strong> Click "Deploy Contract" and wait for confirmation</li>
                   </ol>
@@ -207,6 +207,8 @@ const DeployForm: React.FC<DeployFormProps> = ({ onDeploy, contractType }) => {
                     <li style={{ marginBottom: 8 }}>Move contracts (.move files) for MoveVM</li>
                     <li style={{ marginBottom: 8 }}>Solidity contracts (.sol files) for EVM</li>
                     <li style={{ marginBottom: 8 }}>Account address for Move deployments</li>
+                    <li style={{ marginBottom: 8 }}>Maximum file size: 1MB</li>
+                    <li style={{ marginBottom: 8 }}>Maximum code length: 50,000 characters</li>
                   </ul>
                 </div>
                 
