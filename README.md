@@ -1,6 +1,6 @@
 # Umi Playground
 
-A web application for deploying smart contracts on Umi Network. Supports both MoveVM and EVM (Solidity) contract deployments with a beautiful glassmorphism UI.
+A web application for deploying smart contracts on Umi Network. Supports both MoveVM and EVM (Solidity) contract deployments.
 
 ## Features
 
