@@ -37,7 +37,7 @@ A web application for deploying smart contracts on Umi Network. Supports both Mo
 ### For Development
 - Node.js 18+
 - npm or yarn
-- Umi Network test tokens
+- Umi Network ETH
 
 ## File Limits
 
